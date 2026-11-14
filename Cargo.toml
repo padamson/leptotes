@@ -1,14 +1,14 @@
 [package]
-name = "my-project"
+name = "leptotes"
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.88"
 license = "MIT OR Apache-2.0"
-description = "A short description of your project"
-repository = "https://github.com/OWNER/REPO"
-authors = ["Your Name"]
-categories = []
-keywords = []
+description = "Minimal component testing for Leptos: render a component to HTML and assert on it"
+repository = "https://github.com/padamson/leptotes"
+authors = ["Paul Adamson"]
+categories = ["development-tools::testing", "web-programming"]
+keywords = ["leptos", "testing", "component", "ssr"]
 
 [lints.rust]
 # Nothing here has a reason to reach for unsafe. `deny` (not `forbid`)
@@ -16,13 +16,10 @@ keywords = []
 # edge genuinely needs one.
 unsafe_code = "deny"
 
-# The place for the clippy lints this crate turns on; the template imposes
-# none. After converting to a workspace, move both tables to
-# `[workspace.lints.*]` and give each crate `[lints] workspace = true`.
+# The policy the crate was written under in slp.
 [lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
 
 [dependencies]
-
-[dev-dependencies]
-# Scratch directories for the integration-test fixture in tests/common.
-tempfile = "3"
+leptos = { version = "0.8", default-features = false, features = ["ssr"] }
