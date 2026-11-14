@@ -14,7 +14,7 @@
 //! use leptos::prelude::*;
 //!
 //! let html = leptotes::render(|| view! { <p>"hello"</p> });
-//! assert!(html.contains("hello"));
+//! assert_eq!(html, "<p>hello</p>");
 //! ```
 
 use leptos::prelude::*;
@@ -24,6 +24,10 @@ use leptos::tachys::view::RenderHtml;
 ///
 /// Takes a closure so the view (and any signals it creates) is constructed
 /// inside the temporary [`Owner`], matching how Leptos renders in production.
+///
+/// The string is Leptos's SSR output as is, hydration markers included: reactive
+/// text next to static text comes out as `<button>Clicked <!>3<!> times</button>`.
+/// An exact comparison holds only where no marker appears.
 #[must_use]
 pub fn render<F, V>(view_fn: F) -> String
 where
@@ -47,22 +51,41 @@ mod tests {
     use super::*;
 
     #[test]
-    fn renders_a_view_to_html() {
-        let html = render(|| view! { <p>"hello"</p> });
-        assert!(html.contains("hello"));
-        assert!(html.contains("<p"));
+    fn renders_static_markup_to_html() {
+        assert_eq!(render(|| view! { <p>"hello"</p> }), "<p>hello</p>");
     }
 
     #[test]
-    fn renders_dynamic_text() {
-        let name = "world";
-        let html = render(move || view! { <span>{name}</span> });
-        assert!(html.contains("world"));
+    fn renders_the_current_value_of_a_signal() {
+        let html = render(|| {
+            let n = RwSignal::new(3);
+            view! { <span>{move || n.get()}</span> }
+        });
+        assert_eq!(html, "<span>3</span>");
     }
 
     #[test]
-    fn count_counts_non_overlapping_occurrences() {
-        assert_eq!(count("<line/><line/><line/>", "<line"), 3);
-        assert_eq!(count("nothing here", "<line"), 0);
+    fn reactive_text_beside_static_text_keeps_its_hydration_markers() {
+        let html = render(|| {
+            let n = RwSignal::new(3);
+            view! { <button>"Clicked " {move || n.get()} " times"</button> }
+        });
+        assert_eq!(html, "<button>Clicked <!>3<!> times</button>");
+    }
+
+    #[test]
+    fn the_view_sees_context_provided_inside_render() {
+        // Without the owner, `provide_context` has nowhere to store the
+        // value and `use_context` falls back to -1.
+        let html = render(|| {
+            provide_context(42_i32);
+            view! { <span>{use_context::<i32>().unwrap_or(-1)}</span> }
+        });
+        assert_eq!(html, "<span>42</span>");
+    }
+
+    #[test]
+    fn count_does_not_count_overlapping_matches() {
+        assert_eq!(count("aaaa", "aa"), 2);
     }
 }
