@@ -1,6 +1,11 @@
-# Project Name
+# leptotes
 
-<!-- Replace with a one-line description of what this project does -->
+A library for testing Leptos components natively: `render` builds a view
+to its SSR HTML string inside a fresh reactive owner, and a plain `#[test]`
+asserts on that string. No browser, no `wasm-bindgen-test`. What it covers,
+what it leaves to playwright-rust end-to-end tests, and the backlog are in
+`docs/PLAN.md` and `docs/stories/`. New helpers land only when a consumer's
+component test needs one.
 
 ## Development
 
@@ -86,8 +91,9 @@ Dependabot malware alerts, and the crate's Trusted Publisher.
 
 ## Agent skills
 
-`skills/my-project/` is the skill this crate ships to consumers. Edits to
-it must bump `metadata.version` in its `SKILL.md`; the pre-commit hook
+`skills/leptotes/` is the skill this crate will ship to consumers. It
+stays hidden from installers (`metadata.internal: true`) until the API
+settles. Edits to it must bump `metadata.version` in its `SKILL.md`; the pre-commit hook
 and the `Skill version guard` CI job both enforce that.
 
 Skills of tools this crate depends on are managed installs, not vendored:
@@ -137,14 +143,11 @@ narrows from there.
 ## Tests
 
 A test is a claim about behavior, named as the claim, one claim per
-test, asserting the value (`assert_eq!` on an enum, `matches!` on the
-error variant and what it names) rather than prose. The seed crate shows
-the shapes: a decision returned as a value, an error that carries the
-offending input, an environment read through an injected lookup, a
-`TempDir`-owning fixture and a bounded poll in `tests/common/mod.rs`,
-and one `#[ignore = "reason; run with ..."]` test as the gate for
-anything a fresh clone may lack. Never `return` from a test because a
-precondition is missing.
+test, asserting the value rather than prose: `assert_eq!` on the rendered
+HTML, which is exact wherever Leptos puts no `<!>` hydration marker (the
+`render` doc says where it does). A test that needs something a fresh
+clone may lack is gated with `#[ignore = "reason; run with ..."]`. Never
+`return` from a test because a precondition is missing.
 
 `.config/nextest.toml` bounds every test with a slow-timeout; the hook
 runs the default profile (no retries) and CI runs `--profile ci` (one
@@ -173,5 +176,3 @@ After a crate's first publish (the first release, or a crate new to the
 workspace), add `[policy.<crate>] audit-as-crates-io = false` to
 `supply-chain/config.toml`. Until it is there, `cargo vet` matches the
 path crate to its crates.io version and fails every push.
-
-<!-- Add custom skills under .claude/skills/ as needed -->

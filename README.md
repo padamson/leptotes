@@ -1,45 +1,62 @@
-<!-- Replace "Project Name" with your project name. -->
-# Project Name
+# leptotes
 
-<!-- Replace this line with a one-sentence description of your project. -->
+Native component tests for [Leptos](https://leptos.dev): render a
+component to its HTML in a plain `#[test]` and assert on the result, with
+no browser and no `wasm-bindgen-test` runner.
 
-<!--
-Template users: after creating your repo from this template, see SETUP.md
-for the full onboarding checklist. At minimum, replace every occurrence of
-`my-project` and `Project Name` throughout this file, and update
-`Cargo.toml` (name, description, repository, authors, keywords, categories).
--->
+**Status:** early. The API is two functions, `render` and `count`, and it
+grows only when a component test needs something more. It is not on
+crates.io yet.
+
+## What it does
+
+`leptotes::render` builds a view inside a fresh reactive owner and returns
+its server-side (SSR) HTML string, the way Leptos renders in production,
+so signals and context created in the view work as they do there. The test
+runner is whatever you already use (`cargo test` or `cargo nextest run`).
+
+It sees the initial render only. Clicks, layout, visibility, and anything
+that happens after hydration need a real browser, so they belong in an
+end-to-end test (for example with
+[playwright-rust](https://github.com/padamson/playwright-rust)).
+[`docs/PLAN.md`](docs/PLAN.md) draws that line in more detail and lists
+what may come next.
 
 ## Installation
 
-<!-- Replace `my-project` with your crate name. -->
-```bash
-cargo install my-project
+Until the first release, take it from git as a dev-dependency:
+
+```toml
+[dev-dependencies]
+leptotes = { git = "https://github.com/padamson/leptotes" }
 ```
+
+The component crate needs Leptos's `ssr` feature in its test build.
 
 ## Usage
 
-<!-- Replace `my-project` with your binary name, or replace this section
-     entirely with library usage examples if this is a library crate. -->
-```bash
-my-project --help
+```rust
+use leptos::prelude::*;
+
+#[test]
+fn greeting_renders_the_name() {
+    let html = leptotes::render(|| view! { <p>"hello"</p> });
+    assert_eq!(html, "<p>hello</p>");
+}
+
+#[test]
+fn list_renders_one_item_per_entry() {
+    let html = leptotes::render(|| {
+        view! { <ul>{["a", "b", "c"].into_iter().map(|i| view! { <li>{i}</li> }).collect_view()}</ul> }
+    });
+    assert_eq!(leptotes::count(&html, "<li>"), 3);
+}
 ```
 
-## Agent skill
-
-<!-- Template users: keep this block if the crate ships a skill under
-     `skills/`; delete it (and the skills/ directory) if not. SETUP.md has
-     the checklist. -->
-[![skills.sh](https://skills.sh/b/OWNER/REPO)](https://skills.sh/OWNER/REPO)
-
-```bash
-npx skills add OWNER/REPO
-```
-
-Works with [Claude Code](https://claude.ai/code),
-[Codex](https://openai.com/codex/), [Cursor](https://cursor.com), and any
-other [compatible agent](https://agentskills.io/clients). The install copies
-the skill into your repo and records its source in `skills-lock.json`.
+The string is Leptos's SSR output as is, so it keeps the `<!>` hydration
+markers Leptos writes beside reactive content (`<button>Clicked <!>3<!>
+times</button>`). Compare exactly only where none appears, and count or
+match a fragment elsewhere.
 
 ## Development
 
