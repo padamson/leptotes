@@ -1,14 +1,12 @@
 //! Minimal component testing for Leptos.
 //!
-//! `leptotes` (Greek δοκιμή, "a test / proof") renders a Leptos view to an HTML
-//! string under a fresh reactive owner so components can be asserted on in fast,
-//! native unit tests — no browser, no `wasm-bindgen-test` runner. It is the
+//! `leptotes` (Greek λεπτότης, "fineness, delicacy") renders a Leptos view to an
+//! HTML string under a fresh reactive owner so components can be asserted on in
+//! fast, native unit tests — no browser, no `wasm-bindgen-test` runner. It is the
 //! cheap inner-loop complement to the playwright-rust end-to-end gate.
 //!
-//! Incubated in the slp workspace and dogfooded against `slp-ui` / `theoria`;
-//! kept framework-only (no slp deps) so it can graduate to its own crate. Its
-//! capabilities are **pulled by demand** — a new helper lands when an slp (or
-//! theoria) component test needs it. See `docs/PLAN.md`.
+//! Its capabilities are **pulled by demand**: a new helper lands when a
+//! consumer's component test needs it. See `docs/PLAN.md`.
 //!
 //! ```
 //! use leptos::prelude::*;

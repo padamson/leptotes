@@ -3,7 +3,7 @@
 Testing-Library-style component testing for Leptos: render a component to HTML
 under a reactive owner and assert on it, **natively** (no browser, no
 `wasm-bindgen-test`). The fast inner-loop complement to the playwright-rust e2e
-gate. Incubated as a crate in the slp workspace; spun out later once stable.
+gate.
 
 ## Demand-driven (the governing rule)
 
@@ -19,7 +19,7 @@ holding pen.
 - **Complements, doesn't replace, playwright.** leptotes sees the initial/SSR
   render (and signal-driven reactivity); real DOM *events* (clicks) need a
   browser → that's the e2e's job. There is no jsdom for Rust/wasm.
-- **Framework-only** (no slp deps); spin out when the API stabilizes.
+- **Framework-only:** no dependency on any consumer.
 
 ## Backlog
 
