@@ -99,10 +99,12 @@ classic omission) means a bump merges with that job red.
 - `MSRV Check` — cheap; catches accidental use of post-MSRV features
 - `Lint` — fmt, clippy, doctest, cargo doc (ubuntu-only)
 - `Test on ubuntu-latest`, `Test on macos-latest`, `Test on windows-latest`
-- `License & Dependency Check`, `Supply Chain Review`
-- `Mutation Testing (diff)`, `Skill version guard`
+- `supply-chain / License & Dependency Check`, `supply-chain / Supply Chain Review`
+- `mutation / Mutation Testing (diff)`, `Skill version guard`
 
-`Semver preview` stays off the list. It is the early warning for the
+The `supply-chain /` and `mutation /` prefixes are the calling jobs in
+`security.yml`; the jobs themselves live in `padamson/rust-ci-workflows`.
+`semver-preview / Semver preview` stays off the list. It is the early warning for the
 release's semver gate, and on 0.x a deliberate breaking change turns it
 red until the release that bumps the version, which would block every
 merge in between. `dependabot-auto-merge.yml`'s two jobs, `Hold a PR that
@@ -236,7 +238,9 @@ GitHub's OIDC identity for this repo and this workflow. There is no
   code. From the first publish on, `cargo vet` matches the path crate to
   the published version and fails every push ("non-crates.io-fetched
   packages match published crates.io versions") until the crate has a
-  policy. Add to `supply-chain/config.toml`, once per published crate:
+  policy, and so does the vet gate on its release tag. Add to
+  `supply-chain/config.toml`, once per published crate, and tag the
+  commit that adds it, not the one you published from:
 
   ```toml
   [policy.<crate>]
@@ -296,7 +300,9 @@ See the cargo-vet section below.
 
 Until `cargo vet init` has run, both the pre-commit `cargo vet` hook and
 the CI `Supply Chain Review` job print a skip message and pass, so the
-first commit and push of a new repo are not blocked on this section.
+first commit and push of a new repo are not blocked on this section. A
+release tag does not skip: its vet gate fails until `supply-chain/` is
+committed, so nothing publishes unvetted.
 
 After your first `cargo build`, initialize supply chain auditing:
 
