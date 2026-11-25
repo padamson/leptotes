@@ -81,6 +81,12 @@ user-id = 33035 # Taiki Endo (taiki-e)
 start = "2025-03-27"
 end = "2027-11-15"
 
+[[trusted.form_urlencoded]]
+criteria = "safe-to-deploy"
+user-id = 1139 # Manish Goregaokar (Manishearth)
+start = "2021-02-19"
+end = "2027-11-25"
+
 [[trusted.futures-task]]
 criteria = "safe-to-deploy"
 user-id = 33035 # Taiki Endo (taiki-e)
