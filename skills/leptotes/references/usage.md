@@ -6,3 +6,34 @@
   signals and context outside the owner.
 - `count(haystack: &str, needle: &str) -> usize`: non-overlapping
   occurrences of `needle`, for counts such as `count(&html, "<li")`.
+- `dom<F, V>(view_fn: F) -> Dom`: `render`, then `Dom::parse`.
+- `Dom::parse(html: &str) -> Dom`: parse an HTML fragment. A `Dom` prints
+  as that HTML.
+- `Dom` and `Element` share five queries by CSS selector, in document
+  order; an `Element`'s see only its descendants:
+  - `count(sel) -> usize`
+  - `find(sel) -> Element`: panics unless exactly one element matches,
+    naming the selector and the number found and printing the markup as
+    parsed.
+  - `find_all(sel) -> Vec<Element>`
+  - `texts(sel) -> Vec<String>`: each match's `text()`.
+  - `attrs(sel, name) -> Vec<&str>`: each match's value of `name`; a
+    match without it is left out.
+- `Element::text() -> String`: its `textContent` (adjacent elements join
+  with nothing between), entities decoded, comments (the `<!>` markers)
+  left out, whitespace trimmed and collapsed. A non-breaking space stays.
+- `Element::attr(name) -> Option<&str>`. An `Element`'s queries do not
+  see the element itself. It prints as its own markup, serialized again,
+  so a `<!>` marker prints as `<!---->`.
+- Every query panics on a selector scraper does not implement, naming
+  it. That includes state pseudo-classes (`:checked`, `:disabled`,
+  `:hover`) and pseudo-elements; select on the attribute (`[checked]`).
+- The fragment is parsed as a `<template>`'s contents: a bare `<tr>` or
+  `<td>` keeps its tags, and a `<table>` gets a `<tbody>`, so select
+  `table tr`, not `table > tr`.
+- A fragment whose first element only SVG has (`<g>`, `<line>`,
+  `<marker>`) is parsed as an `<svg>`'s contents, keeping `<image>` and
+  camelCase attributes. One that starts with `<a>`, `<script>`, `<style>`,
+  or `<title>` is parsed as HTML; wrap it in an `<svg>`.
+- A whole document loses its `<html>`, `<head>`, and `<body>` tags.
+- Queries and `text()` skip what is inside a `<template>` element.

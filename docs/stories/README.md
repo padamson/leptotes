@@ -40,12 +40,12 @@ roadmap** in [`../PLAN.md`](../PLAN.md). All items are pulled on demand.
 | # | Story | Doc |
 |---|---|---|
 | D1 | Render a component and assert on its markup natively | [D1](D1-render-and-assert.md) |
+| D4 | Query the SSR output by CSS selector (`Dom`: count/find/find_all/texts/attrs) | [D4](D4-query-by-selector.md) |
 
 **Backlog** (native — leptotes's lane; pull when a test needs it)
 
 | # | Story | Tier |
 |---|---|---|
-| D4 | Query the SSR output by CSS selector (`Dom`: count/exists/text/attr) | 1 |
 | D3 | jest-dom-style assertions (`in_document`/`has_attribute`/`has_class`/`has_text`) with readable failures | 1 |
 | D7 | Role-based queries (`by_role(role, name)`) from implicit ARIA roles | 2 |
 | D6 | Snapshot testing (golden HTML, update flag) | 3 |

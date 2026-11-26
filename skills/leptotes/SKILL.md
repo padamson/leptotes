@@ -1,9 +1,9 @@
 ---
 name: leptotes
-description: Use when writing or reviewing native unit tests for Leptos components with the leptotes crate (`leptotes::render`, `leptotes::count`), when writing a new component's first-render tests before the component and its CSS, when a component test should run under plain `cargo test` or nextest without a browser, or when deciding whether a check belongs in a leptotes test or a playwright-rust end-to-end test.
+description: Use when writing or reviewing native unit tests for Leptos components with the leptotes crate (`leptotes::render`, `leptotes::dom`, `leptotes::count`), when writing a new component's first-render tests before the component and its CSS, when a component test should run under plain `cargo test` or nextest without a browser, or when deciding whether a check belongs in a leptotes test or a playwright-rust end-to-end test.
 license: MIT OR Apache-2.0
 metadata:
-  version: "0.2.0"
+  version: "0.3.0"
   internal: true
 ---
 
@@ -28,6 +28,17 @@ string. Signals and context created inside the closure work as they do in
 production. The output keeps Leptos's `<!>` hydration markers, so compare
 exactly only where none appears.
 
+`leptotes::dom(|| view! { ... })` renders the same way and parses the
+HTML, so the test queries it by CSS selector: `dom.count(sel)`,
+`dom.find(sel)` (exactly one match, or a panic that prints the HTML),
+`dom.find_all(sel)`, `dom.texts(sel)`, and `dom.attrs(sel, name)`. An
+element's `text()` is its `textContent` with the markers left out and its
+whitespace collapsed, so it compares exactly (adjacent elements join with
+nothing between: `<h1>A</h1><p>B</p>` reads `AB`). Prefer these to substring counts on the HTML
+string: `count(&html, "active")` also matches an arg named `active`, and
+`dom.count("button.active")` does not. Pass `"{dom}"` as the assertion's
+message so a failure shows the markup.
+
 leptotes sees the initial render only. Clicks, layout, visibility and
 anything after hydration belong in a playwright-rust end-to-end test.
 
@@ -41,16 +52,18 @@ first. Then, before the component or its CSS exists, write leptotes tests
 for its first render:
 
 1. **Its parts, in order.** Each part is present
-   (`count(&html, r#"<h1 class="my-hero-title">"#)` is 1), and one comes
-   before the next (compare `html.find` positions). Render an empty
-   version too, and check that the optional parts are absent.
+   (`dom.find("h1.my-hero-title").text()` is the title), and they come in
+   order (`dom.texts("section > *")` lists the section's children as
+   rendered).
+   Render an empty version too, and check that the optional parts are
+   absent (`dom.count(".my-hero-tagline")` is 0).
 2. **A site's classes after the component's own.** A `class="tall"` prop
-   renders as `class="my-hero tall"`, so a site's rules build on the
-   component's.
+   renders as `class="my-hero tall"` (`dom.find("section").attr("class")`),
+   so a site's rules build on the component's.
 3. **Every class the markup carries has a rule in the stylesheet.**
-   Collect the names inside each `class="..."` in the HTML, and assert
-   that the list of those with no `.name {` in the stylesheet is empty.
-   One helper serves every component's test.
+   Split each value of `dom.attrs("[class]", "class")` on whitespace, and
+   assert that the list of names with no `.name {` in the stylesheet is
+   empty. One helper serves every component's test.
 
 Then write the component and its CSS until those pass.
 

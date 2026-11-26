@@ -53,9 +53,9 @@ JS-testing capabilities split cleanly:
   analog); leptotes does not and should not provide one.
 
 ### Tier 1 — replace brittle substring matching (native)
-- **CSS-selector query API** — a parsed `Dom` with `count`/`exists`/`text`/`attr`
-  by selector, instead of `count(&html, "<line")`. The foundation everything else
-  builds on. (This is backlog **D4**.)
+- **CSS-selector query API** — a parsed `Dom` with `count`/`find`/`find_all`/
+  `texts`/`attrs` by selector, instead of `count(&html, "<line")`. The foundation
+  everything else builds on. (Backlog **D4**, done.)
 - **jest-dom-style assertions** — ergonomic helpers with readable failures:
   `assert_in_document`, `has_attribute`, `has_class`, `has_text`, `count`. Cheap
   once the `Dom` exists. (Backlog **D3**.)

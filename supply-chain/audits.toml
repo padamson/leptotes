@@ -27,6 +27,12 @@ user-id = 3618 # David Tolnay (dtolnay)
 start = "2019-07-23"
 end = "2027-11-15"
 
+[[trusted.bitflags]]
+criteria = "safe-to-deploy"
+user-id = 3204 # Ashley Mannix (KodrAus)
+start = "2019-05-02"
+end = "2027-11-25"
+
 [[trusted.bytes]]
 criteria = "safe-to-deploy"
 user-id = 6741 # Alice Ryhl (Darksonn)
@@ -57,6 +63,12 @@ user-id = 1139 # Manish Goregaokar (Manishearth)
 start = "2024-06-20"
 end = "2027-11-15"
 
+[[trusted.dtoa]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2019-05-02"
+end = "2027-11-25"
+
 [[trusted.either]]
 criteria = "safe-to-deploy"
 user-id = 539 # Josh Stone (cuviper)
@@ -80,6 +92,12 @@ criteria = "safe-to-deploy"
 user-id = 33035 # Taiki Endo (taiki-e)
 start = "2025-03-27"
 end = "2027-11-15"
+
+[[trusted.fastrand]]
+criteria = "safe-to-deploy"
+user-id = 33035 # Taiki Endo (taiki-e)
+start = "2021-04-24"
+end = "2027-11-25"
 
 [[trusted.form_urlencoded]]
 criteria = "safe-to-deploy"
@@ -249,11 +267,35 @@ user-id = 166196 # Robert Bastian (robertbastian)
 start = "2023-01-26"
 end = "2027-11-15"
 
+[[trusted.lock_api]]
+criteria = "safe-to-deploy"
+user-id = 2915 # Amanieu d'Antras (Amanieu)
+start = "2019-05-04"
+end = "2027-11-25"
+
 [[trusted.memchr]]
 criteria = "safe-to-deploy"
 user-id = 189 # Andrew Gallant (BurntSushi)
 start = "2019-07-07"
 end = "2027-11-15"
+
+[[trusted.new_debug_unreachable]]
+criteria = "safe-to-deploy"
+user-id = 2017 # Matt Brubeck (mbrubeck)
+start = "2019-02-26"
+end = "2027-11-25"
+
+[[trusted.parking_lot]]
+criteria = "safe-to-deploy"
+user-id = 2915 # Amanieu d'Antras (Amanieu)
+start = "2019-05-04"
+end = "2027-11-25"
+
+[[trusted.parking_lot_core]]
+criteria = "safe-to-deploy"
+user-id = 2915 # Amanieu d'Antras (Amanieu)
+start = "2019-05-04"
+end = "2027-11-25"
 
 [[trusted.paste]]
 criteria = "safe-to-deploy"
@@ -333,6 +375,12 @@ user-id = 189 # Andrew Gallant (BurntSushi)
 start = "2019-07-16"
 end = "2027-11-15"
 
+[[trusted.scopeguard]]
+criteria = "safe-to-deploy"
+user-id = 2915 # Amanieu d'Antras (Amanieu)
+start = "2020-02-16"
+end = "2027-11-25"
+
 [[trusted.serde]]
 criteria = "safe-to-deploy"
 user-id = 3618 # David Tolnay (dtolnay)
@@ -371,7 +419,7 @@ end = "2027-11-15"
 
 [[trusted.smallvec]]
 criteria = "safe-to-deploy"
-user-id = 2017
+user-id = 2017 # Matt Brubeck (mbrubeck)
 start = "2019-10-28"
 end = "2027-11-15"
 

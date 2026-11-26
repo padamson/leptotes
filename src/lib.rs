@@ -14,6 +14,26 @@
 //! let html = leptotes::render(|| view! { <p>"hello"</p> });
 //! assert_eq!(html, "<p>hello</p>");
 //! ```
+//!
+//! [`dom`] renders the same way and parses the HTML, so a test can query it
+//! by CSS selector:
+//!
+//! ```
+//! use leptos::prelude::*;
+//!
+//! let dom = leptotes::dom(|| view! {
+//!     <select>
+//!         <option value="dev">"dev"</option>
+//!         <option value="0.14.0" selected>"v0.14.0"</option>
+//!     </select>
+//! });
+//! assert_eq!(dom.attrs("option", "value"), ["dev", "0.14.0"], "{dom}");
+//! assert_eq!(dom.find("option[selected]").text(), "v0.14.0", "{dom}");
+//! ```
+
+mod dom;
+
+pub use dom::{Dom, Element, dom};
 
 use leptos::prelude::*;
 use leptos::tachys::view::RenderHtml;
@@ -36,8 +56,8 @@ where
     owner.with(|| view_fn().to_html())
 }
 
-/// Number of non-overlapping occurrences of `needle` in `haystack`. Handy for
-/// counting rendered elements, e.g. `count(&html, "<line")`.
+/// Number of non-overlapping occurrences of `needle` in `haystack`. To count
+/// elements in rendered HTML by selector, use [`Dom::count`].
 #[must_use]
 pub fn count(haystack: &str, needle: &str) -> usize {
     haystack.matches(needle).count()

@@ -19,5 +19,5 @@ or a wasm test runner.
 
 - Tests are plain `#[test]` fns discovered by nextest; leptotes adds no attribute
   or runner of its own.
-- `count` is substring-based; pull **D4** (selector queries) when that gets
-  brittle. leptotes sees SSR/initial render only; interaction is the e2e's job.
+- `count` is substring-based; **D4** added selector queries for HTML.
+  leptotes sees SSR/initial render only; interaction is the e2e's job.
