@@ -20,6 +20,13 @@ holding pen.
   render (and signal-driven reactivity); real DOM *events* (clicks) need a
   browser → that's the e2e's job. There is no jsdom for Rust/wasm.
 - **Framework-only:** no dependency on any consumer.
+- **One Leptos minor per leptotes minor.** `RenderHtml` is in `render`'s
+  signature, so Leptos is a public dependency. A range across two minors
+  (`>=0.8, <0.10`) lets Cargo resolve one Leptos for leptotes and another
+  for the consumer, and the view then fails to compile; the Cargo book
+  warns against it ("SemVer compatibility" in the resolver chapter).
+  leptotes 0.1 takes Leptos 0.8, and the first leptotes minor after Leptos
+  0.9 ships takes 0.9. Decided 2026-11-27, with 0.9 at `0.9.0-rc1`.
 
 ## Backlog
 

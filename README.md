@@ -36,6 +36,11 @@ leptotes = { git = "https://github.com/padamson/leptotes" }
 
 The component crate needs Leptos's `ssr` feature in its test build.
 
+leptotes works with Leptos 0.8. Its functions take Leptos's own types, so
+the crate under test and leptotes must use the same Leptos minor version;
+with two, a view fails to compile against `render`. Each Leptos minor
+version gets its own leptotes minor version.
+
 ## Usage
 
 ```rust
