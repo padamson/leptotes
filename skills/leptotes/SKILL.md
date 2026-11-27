@@ -3,7 +3,7 @@ name: leptotes
 description: Use when writing or reviewing native unit tests for Leptos components with the leptotes crate (`leptotes::render`, `leptotes::dom`, `leptotes::count`), when writing a new component's first-render tests before the component and its CSS, when a component test should run under plain `cargo test` or nextest without a browser, or when deciding whether a check belongs in a leptotes test or a playwright-rust end-to-end test.
 license: MIT OR Apache-2.0
 metadata:
-  version: "0.3.0"
+  version: "0.4.0"
   internal: true
 ---
 
@@ -34,7 +34,11 @@ HTML, so the test queries it by CSS selector: `dom.count(sel)`,
 `dom.find_all(sel)`, `dom.texts(sel)`, and `dom.attrs(sel, name)`. An
 element's `text()` is its `textContent` with the markers left out and its
 whitespace collapsed, so it compares exactly (adjacent elements join with
-nothing between: `<h1>A</h1><p>B</p>` reads `AB`). Prefer these to substring counts on the HTML
+nothing between: `<h1>A</h1><p>B</p>` reads `AB`); `text_content()` keeps
+the whitespace, for code in a `<pre>` or a `<style>`'s stylesheet.
+`dom.find(":scope > *")` is the component's root element, and panics if
+it renders more than one (not for a component that renders a whole
+document, whose `<html>`, `<head>`, and `<body>` tags are dropped). Prefer these to substring counts on the HTML
 string: `count(&html, "active")` also matches an arg named `active`, and
 `dom.count("button.active")` does not. Pass `"{dom}"` as the assertion's
 message so a failure shows the markup.
@@ -58,7 +62,8 @@ for its first render:
    Render an empty version too, and check that the optional parts are
    absent (`dom.count(".my-hero-tagline")` is 0).
 2. **A site's classes after the component's own.** A `class="tall"` prop
-   renders as `class="my-hero tall"` (`dom.find("section").attr("class")`),
+   renders as `class="my-hero tall"`
+   (`dom.find(":scope > *").attr("class")`),
    so a site's rules build on the component's.
 3. **Every class the markup carries has a rule in the stylesheet.**
    Split each value of `dom.attrs("[class]", "class")` on whitespace, and

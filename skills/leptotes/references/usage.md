@@ -19,9 +19,18 @@
   - `texts(sel) -> Vec<String>`: each match's `text()`.
   - `attrs(sel, name) -> Vec<&str>`: each match's value of `name`; a
     match without it is left out.
-- `Element::text() -> String`: its `textContent` (adjacent elements join
-  with nothing between), entities decoded, comments (the `<!>` markers)
-  left out, whitespace trimmed and collapsed. A non-breaking space stays.
+- `Element::text_content() -> String`: its `textContent`, whitespace
+  kept (adjacent elements join with nothing between), the `<!>` markers
+  left out. For a `<pre>` or a `<style>`. It is what a browser's parser
+  yields: a newline directly after `<pre>` or `<textarea>` is dropped, CR
+  and CRLF become LF, and entities are decoded except in an HTML `<style>`
+  or `<script>` (one inside an `<svg>` is decoded).
+- `Element::text() -> String`: `text_content()` with whitespace trimmed
+  and collapsed. A non-breaking space stays.
+- `:scope > *` selects the top-level elements of a `Dom`, or the children
+  of an `Element`. `dom.find(":scope > *")` is the component's one root
+  element, or a panic if it renders more than one. A whole document's top
+  level is what its `<head>` and `<body>` held.
 - `Element::attr(name) -> Option<&str>`. An `Element`'s queries do not
   see the element itself. It prints as its own markup, serialized again,
   so a `<!>` marker prints as `<!---->`.
@@ -36,4 +45,4 @@
   camelCase attributes. One that starts with `<a>`, `<script>`, `<style>`,
   or `<title>` is parsed as HTML; wrap it in an `<svg>`.
 - A whole document loses its `<html>`, `<head>`, and `<body>` tags.
-- Queries and `text()` skip what is inside a `<template>` element.
+- Queries and the text methods skip what is inside a `<template>` element.

@@ -73,14 +73,22 @@ elements in document order:
 | `texts(sel)` | the text of each match |
 | `attrs(sel, name)` | the value of `name` on each match that has it |
 
-An `Element` has `text()` and `attr(name)`, and the same five queries,
-which see only its descendants. `text()` is the element's `textContent`
-with the `<!>` markers gone, entities decoded, and whitespace trimmed and
-collapsed (a non-breaking space stays), so it compares exactly. Like
-`textContent`, it joins adjacent elements with nothing between
-(`<h1>A</h1><p>B</p>` reads `AB`). A `Dom`
-prints as the rendered HTML, so `"{dom}"` makes a failure message show what
-was rendered.
+An `Element` has `text()`, `text_content()`, and `attr(name)`, and the same
+five queries, which see only its descendants. `text_content()` is the
+element's `textContent`, whitespace kept, for a `<pre>`'s code or a
+`<style>`'s stylesheet. It is the text a browser's parser yields, not the
+source: a newline directly after `<pre>` or `<textarea>` is dropped, CR and
+CRLF become LF, and entities are decoded, except in an HTML `<style>` or
+`<script>` (one inside an `<svg>` is decoded). The `<!>` markers are gone.
+`text()` is the same with whitespace trimmed and collapsed (a non-breaking
+space stays), so it compares exactly. Both join adjacent elements with
+nothing between (`<h1>A</h1><p>B</p>` reads `AB`), as `textContent` does.
+
+`:scope > *` selects the top-level elements, of a `Dom` or of an
+`Element`, so `dom.find(":scope > *")` is the one element a component
+renders at its root, and fails if it renders more (a whole document's top
+level is what its `<head>` and `<body>` held). A `Dom` prints as the
+rendered HTML, so `"{dom}"` makes a failure message show what was rendered.
 
 ```rust
 use leptos::prelude::*;
@@ -111,8 +119,8 @@ What the parser does with the HTML:
   nothing and `table tr` matches the row.
 - A whole document loses its `<html>`, `<head>`, and `<body>` tags (and
   their attributes); what they held is still there to query.
-- Queries and `text()` skip what is inside a `<template>` element, as a
-  browser's do.
+- Queries and the text methods skip what is inside a `<template>`
+  element, as a browser's do.
 
 Selectors are the ones scraper implements. It has no state pseudo-classes
 (`:checked`, `:disabled`, `:hover`) and no pseudo-elements, and a query

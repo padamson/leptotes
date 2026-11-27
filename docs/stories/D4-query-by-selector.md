@@ -21,6 +21,13 @@ and fails with the markup in front of me.
   - [x] `Element::text` without hydration markers, entities decoded,
         whitespace collapsed; `Element::attr`
   - [x] an `Element`'s queries see only its descendants
+- **D4.1 — the root element and text with its whitespace** (pulled by pyle's
+  landing-page frame and its theme playground)
+  - [x] `:scope > *` selects the top-level elements, so
+        `dom.find(":scope > *")` is a component's one root
+  - [x] `Element::text_content` keeps whitespace, and `text` collapses it
+  - [x] both leave out the `<!>` markers, also in a `<style>`, `<script>`,
+        or `<textarea>`, where the parser reads a marker as text
 
 ## Notes / refs
 
@@ -34,7 +41,7 @@ and fails with the markup in front of me.
   `<script>`, `<style>`, or `<title>`, or puts a bare SVG part after an
   HTML root, is parsed as HTML. If the guess fails a consumer again, an
   explicit `Dom::parse_svg` replaces it.
-- Queries and `text()` skip a `<template>` element's contents, which
+- Queries and the text methods skip a `<template>` element's contents, which
   scraper's traversals reach and a browser's do not.
 - A whole document is not handled as one: its `<html>`, `<head>`, and
   `<body>` tags are dropped. A document parse is the fix when a test of an

@@ -1,5 +1,6 @@
 //! Rendered HTML, parsed so a test can query it by CSS selector.
 
+use std::borrow::Cow;
 use std::fmt;
 use std::ops::Deref;
 
@@ -34,8 +35,11 @@ where
 ///
 /// Every query takes a CSS selector and sees the elements in document
 /// order, leaving out what is inside a `<template>`, as a browser's queries
-/// do. A `Dom` prints as the HTML it was parsed from, `<!>` markers and all,
-/// so `"{dom}"` in an assertion's message shows what was rendered.
+/// do. `:scope > *` selects the top-level elements, so
+/// `dom.find(":scope > *")` is the one element a component renders at its
+/// root (for a whole document, the top level is what its `<head>` and
+/// `<body>` held). A `Dom` prints as the HTML it was parsed from, `<!>` markers and
+/// all, so `"{dom}"` in an assertion's message shows what was rendered.
 pub struct Dom {
     html: String,
     tree: Html,
@@ -158,22 +162,42 @@ impl fmt::Debug for Dom {
 pub struct Element<'a>(ElementRef<'a>);
 
 impl<'a> Element<'a> {
-    /// The element's text content, as the DOM's `textContent` reads it: the
-    /// text of every descendant joined with nothing between, so
-    /// `<h1>A</h1><p>B</p>` reads `AB`. Entities are decoded, comments
-    /// (Leptos's `<!>` markers among them) are left out, and HTML whitespace
-    /// is trimmed and collapsed to single spaces. A non-breaking space is
-    /// not HTML whitespace, so it stays.
+    /// The element's [`text_content`](Self::text_content) with HTML
+    /// whitespace trimmed and collapsed to single spaces, so it compares
+    /// exactly: `<p>\n  two   words \n</p>` reads `two words`. A
+    /// non-breaking space is not HTML whitespace, so it stays.
     #[must_use]
     pub fn text(&self) -> String {
-        let raw: String = self
-            .0
+        self.text_content()
+            .split_ascii_whitespace()
+            .collect::<Vec<_>>()
+            .join(" ")
+    }
+
+    /// The element's text as the DOM's `textContent` reads it: the text of
+    /// every descendant with its whitespace kept, joined with nothing
+    /// between, so `<h1>A</h1><p>B</p>` reads `AB`. For a `<pre>`'s code or a
+    /// `<style>`'s stylesheet.
+    ///
+    /// It is the text a browser's parser yields, not the source: a newline
+    /// directly after `<pre>` or `<textarea>` is dropped, and CR and CRLF
+    /// become LF. Entities are decoded, except in an HTML `<style>` or
+    /// `<script>` (one inside an `<svg>` is decoded). Leptos's `<!>` markers
+    /// are left out.
+    #[must_use]
+    pub fn text_content(&self) -> String {
+        self.0
             .descendants()
             .filter(|node| !in_template(node))
-            .filter_map(|node| node.value().as_text())
-            .map(|text| &**text)
-            .collect();
-        raw.split_ascii_whitespace().collect::<Vec<_>>().join(" ")
+            .filter_map(|node| {
+                let text: &str = node.value().as_text()?;
+                Some(if markers_are_text(&node) {
+                    Cow::Owned(text.replace("<!>", ""))
+                } else {
+                    Cow::Borrowed(text)
+                })
+            })
+            .collect()
     }
 
     /// The value of attribute `name`, or `None` if the element lacks it.
@@ -268,6 +292,18 @@ type Node<'a> = <ElementRef<'a> as Deref>::Target;
 fn in_template(node: &Node<'_>) -> bool {
     node.ancestors()
         .any(|ancestor| ancestor.value().is_fragment() && ancestor.parent().is_some())
+}
+
+// Whether `node` is text in an HTML element whose contents the parser reads
+// as text alone, so that a `<!>` marker there is no comment node. A
+// `<textarea>` or `<title>` whose own text spells `&lt;!&gt;` loses that too.
+fn markers_are_text(node: &Node<'_>) -> bool {
+    const TEXT_ONLY: [&str; 8] = [
+        "iframe", "noembed", "noframes", "script", "style", "textarea", "title", "xmp",
+    ];
+    node.parent()
+        .and_then(|parent| parent.value().as_element())
+        .is_some_and(|parent| parent.name.ns == ns!(html) && TEXT_ONLY.contains(&parent.name()))
 }
 
 /// The name of the first element in `html`.
@@ -509,6 +545,103 @@ mod tests {
     fn text_leaves_out_what_is_inside_a_template() {
         let dom = Dom::parse("<div>shown<template>hidden</template></div>");
         assert_eq!(dom.find("div").text(), "shown");
+    }
+
+    #[test]
+    fn text_content_keeps_whitespace() {
+        let dom = Dom::parse("<pre>  a\n    b  </pre>");
+        assert_eq!(dom.find("pre").text_content(), "  a\n    b  ", "{dom}");
+    }
+
+    #[test]
+    fn text_content_leaves_out_the_hydration_markers_beside_reactive_text() {
+        let dom = dom(|| {
+            let n = RwSignal::new(3);
+            view! { <button>"Clicked " {move || n.get()} " times"</button> }
+        });
+        assert_eq!(
+            dom.find("button").text_content(),
+            "Clicked 3 times",
+            "{dom}"
+        );
+    }
+
+    #[test]
+    fn text_content_leaves_out_what_is_inside_a_template() {
+        let dom = Dom::parse("<div> shown <template>hidden</template></div>");
+        assert_eq!(dom.find("div").text_content(), " shown ", "{dom}");
+    }
+
+    // In a `<style>` the parser reads a `<!>` as text, not as a comment.
+    #[test]
+    fn text_content_leaves_out_the_markers_in_a_style_element() {
+        let dom = dom(|| {
+            let color = RwSignal::new("red");
+            view! { <style>":root { color: " {move || color.get()} "; }"</style> }
+        });
+        assert_eq!(
+            dom.find("style").text_content(),
+            ":root { color: red; }",
+            "{dom}"
+        );
+    }
+
+    #[test]
+    fn text_content_leaves_out_the_markers_in_a_textarea() {
+        let dom = dom(|| {
+            let n = RwSignal::new(3);
+            view! { <textarea>"a " {move || n.get()} " b"</textarea> }
+        });
+        assert_eq!(dom.find("textarea").text_content(), "a 3 b", "{dom}");
+    }
+
+    // Anywhere else a marker is a comment, so a `<!>` in the text is text.
+    #[test]
+    fn text_content_keeps_text_that_spells_a_marker() {
+        let dom = Dom::parse("<p>a&lt;!&gt;b</p>");
+        assert_eq!(dom.find("p").text_content(), "a<!>b", "{dom}");
+    }
+
+    #[test]
+    fn text_content_keeps_text_that_spells_a_marker_in_an_svg_style() {
+        let dom = Dom::parse("<svg><style>a&lt;!&gt;b</style></svg>");
+        assert_eq!(dom.find("style").text_content(), "a<!>b", "{dom}");
+    }
+
+    #[test]
+    fn text_content_drops_the_newline_that_opens_a_pre() {
+        let dom = Dom::parse("<pre>\ncode\n</pre>");
+        assert_eq!(dom.find("pre").text_content(), "code\n", "{dom}");
+    }
+
+    // A stylesheet is raw text to the parser: `>` and `&amp;` stay as written.
+    #[test]
+    fn a_style_element_s_text_content_is_its_stylesheet() {
+        let css = ".a > .b {\n  content: \"&amp;\";\n}\n";
+        let dom = Dom::parse(&format!(r#"<style id="s">{css}</style>"#));
+        assert_eq!(dom.find("style#s").text_content(), css, "{dom}");
+    }
+
+    #[test]
+    fn scope_children_are_the_top_level_elements() {
+        let dom = Dom::parse("<div><p>a</p></div><main>b</main>");
+        assert_eq!(dom.texts(":scope > *"), ["a", "b"], "{dom}");
+    }
+
+    #[test]
+    fn find_on_scope_children_is_the_one_root_element() {
+        let dom = Dom::parse(r#"<div class="page"><p>a</p><p>b</p></div>"#);
+        assert_eq!(dom.find(":scope > *").attr("class"), Some("page"), "{dom}");
+    }
+
+    #[test]
+    fn an_element_s_scope_children_are_its_children() {
+        let dom = Dom::parse("<ul><li>a<ul><li>b</li></ul></li></ul>");
+        assert_eq!(
+            dom.find(":scope > ul").texts(":scope > li"),
+            ["ab"],
+            "{dom}"
+        );
     }
 
     #[test]
